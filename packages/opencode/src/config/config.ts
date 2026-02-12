@@ -313,15 +313,22 @@ export namespace Config {
     const targetVersion = Installation.isLocal() ? "latest" : Installation.VERSION
     if (targetVersion === "latest") {
       const isOutdated = await PackageRegistry.isOutdated("@opencode-ai/plugin", depVersion, dir)
-      if (!isOutdated) return false
+      if (!isOutdated) return hasMissingDeps(nodeModules, parsed)
       log.info("Cached version is outdated, proceeding with install", {
         pkg: "@opencode-ai/plugin",
         cachedVersion: depVersion,
       })
       return true
     }
-    if (depVersion === targetVersion) return false
+    if (depVersion === targetVersion) return hasMissingDeps(nodeModules, parsed)
     return true
+  }
+
+  function hasMissingDeps(nodeModules: string, parsed: any) {
+    return Object.keys({
+      ...parsed?.dependencies,
+      ...parsed?.devDependencies,
+    }).some((dep) => !existsSync(path.join(nodeModules, dep)))
   }
 
   function rel(item: string, patterns: string[]) {
